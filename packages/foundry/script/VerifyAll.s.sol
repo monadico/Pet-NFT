@@ -29,7 +29,7 @@ contract VerifyAll is Script {
             string.concat(root, "/broadcast/Deploy.s.sol/", vm.toString(block.chainid), "/run-latest.json");
         string memory content = vm.readFile(path);
 
-        while (this.nextTransaction(content)) {
+        while (nextTransaction(content)) {
             _verifyIfContractDeployment(content);
             currTransactionIdx++;
         }
@@ -77,9 +77,17 @@ contract VerifyAll is Script {
         return;
     }
 
-    function nextTransaction(string memory content) external view returns (bool) {
-        try this.getTransactionFromRaw(content, currTransactionIdx) {
-            return true;
+    function nextTransaction(string memory content) internal view returns (bool) {
+        // Try to parse the transaction hash - if it doesn't exist or is null, return false
+        string memory searchPath = searchStr(currTransactionIdx, "hash");
+        try vm.parseJson(content, searchPath) returns (bytes memory result) {
+            // Check if result is empty (null) or can't be decoded
+            if (result.length == 0) {
+                return false;
+            }
+            // Try to decode as bytes32 - if it fails, the transaction doesn't exist
+            bytes32 hash = abi.decode(result, (bytes32));
+            return hash != bytes32(0);
         } catch {
             return false;
         }
@@ -91,8 +99,8 @@ contract VerifyAll is Script {
         compiledBytecode = vm.readFile(path);
     }
 
-    function getTransactionFromRaw(string memory content, uint96 idx) external pure {
-        abi.decode(vm.parseJson(content, searchStr(idx, "hash")), (bytes32));
+    function getTransactionFromRaw(string memory content, uint96 idx) internal pure returns (bytes32) {
+        return abi.decode(vm.parseJson(content, searchStr(idx, "hash")), (bytes32));
     }
 
     function searchStr(uint96 idx, string memory searchKey) internal pure returns (string memory) {
