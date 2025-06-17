@@ -1,4 +1,4 @@
-# 🏗 Scaffold-ETH 2
+# 🏗 Scaffold-ETH 2 Foundry Edition + Monad Testnet Configuration
 
 <h4 align="center">
   <a href="https://docs.scaffoldeth.io">Documentation</a> |
