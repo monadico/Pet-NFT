@@ -12,16 +12,17 @@ contract PetNFT is ERC721, Ownable {
         string petName;
         string petOwner;
         string petBirth;
+        string imageURI;
     }
 
     mapping(uint256 => PetInfo) private _petInfo;
 
     constructor(address initialOwner) ERC721("PetNFT", "PET") Ownable(initialOwner) {}
 
-    function safeMint(address to, string memory petName, string memory petOwner, string memory petBirth) public {
+    function safeMint(address to, string memory petName, string memory petOwner, string memory petBirth, string memory imageURI) public {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
-        _petInfo[tokenId] = PetInfo(petName, petOwner, petBirth);
+        _petInfo[tokenId] = PetInfo(petName, petOwner, petBirth, imageURI);
     }
 
     // This function is called on mint and transfer.
@@ -45,7 +46,9 @@ contract PetNFT is ERC721, Ownable {
             abi.encodePacked(
                 '{"name": "',
                 info.petName,
-                '", "description": "A soulbound NFT for your beloved pet.", "attributes": [',
+                '", "description": "A soulbound NFT for your beloved pet.", "image": "',
+                info.imageURI,
+                '", "attributes": [',
                 '{"trait_type": "Owner", "value": "',
                 info.petOwner,
                 '"},',
