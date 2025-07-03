@@ -18,14 +18,17 @@ contract PetNFT is ERC721, Ownable {
 
     constructor(address initialOwner) ERC721("PetNFT", "PET") Ownable(initialOwner) {}
 
-    function safeMint(address to, string memory petName, string memory petOwner, string memory petBirth) public onlyOwner {
+    function safeMint(address to, string memory petName, string memory petOwner, string memory petBirth) public {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _petInfo[tokenId] = PetInfo(petName, petOwner, petBirth);
     }
 
+    // This function is called on mint and transfer.
+    // We only allow the transaction if the "from" address is the zero address (i.e., on mint).
     function _update(address to, uint256 tokenId, address auth) internal virtual override returns (address) {
-        if (ownerOf(tokenId) != address(0)) {
+        address from = _ownerOf(tokenId);
+        if (from != address(0)) {
             revert("Token is soulbound and cannot be transferred.");
         }
         return super._update(to, tokenId, auth);
