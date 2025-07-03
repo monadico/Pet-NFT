@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   10143: {
     PetNFT: {
-      address: "0xd98e20c1a373a15585e379464bd12fa818e7ef69",
+      address: "0x4d834963624cb1a6f2c7fdff968caf0d867050a8",
       abi: [
         {
           type: "constructor",
@@ -173,6 +173,11 @@ const deployedContracts = {
             },
             {
               name: "petBirth",
+              type: "string",
+              internalType: "string",
+            },
+            {
+              name: "imageURI",
               type: "string",
               internalType: "string",
             },
@@ -557,7 +562,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deploymentFile: "run-1751512858.json",
+      deploymentFile: "run-1751514569.json",
       deploymentScript: "Deploy.s.sol",
     },
   },
