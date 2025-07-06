@@ -21,3 +21,6 @@ node_modules
 
 # cli
 dist
+
+# Foundry dependencies that shouldn't be tracked
+packages/foundry/lib/evm/

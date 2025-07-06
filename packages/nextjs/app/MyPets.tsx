@@ -5,6 +5,9 @@ import deployedContracts from "../contracts/deployedContracts";
 import { useEffect, useState } from "react";
 import { createPublicClient, http, parseAbiItem } from "viem";
 import { monadTestnet } from "./providers";
+import { AddHistoryModal } from "../components/AddHistoryModal";
+import { PetHistoryList } from "../components/PetHistoryList";
+import Image from "next/image";
 
 const PetNFTABI = deployedContracts[10143].PetNFT.abi;
 const PetNFTAddress = "0x4d834963624Cb1A6f2C7FDFF968cAF0d867050a8";
@@ -28,6 +31,8 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
   });
 
   const [pet, setPet] = useState<Pet | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showAddHistory, setShowAddHistory] = useState(false);
 
   useEffect(() => {
     if (tokenURI) {
@@ -52,15 +57,40 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
   }
 
   return (
+    <>
     <div className="border p-4 rounded-lg shadow">
-      <img src={pet.image} alt={pet.name} className="w-full h-48 object-cover rounded" />
+        <Image src={pet.image} alt={pet.name} width={400} height={192} className="w-full h-48 object-cover rounded" />
       <h3 className="text-xl font-bold mt-4">{pet.name}</h3>
       {pet.attributes.map((attr, i) => (
         <p key={i} className="text-sm">
           <strong>{attr.trait_type}:</strong> {attr.value}
         </p>
       ))}
+        
+        <div className="mt-4 space-y-2">
+          <button
+            onClick={() => setShowAddHistory(true)}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          >
+            Add New History
+          </button>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+          >
+            {showHistory ? "Hide History" : "View History"}
+          </button>
+        </div>
+
+        {showHistory && <PetHistoryList petTokenId={tokenId} />}
     </div>
+
+      <AddHistoryModal
+        isOpen={showAddHistory}
+        onClose={() => setShowAddHistory(false)}
+        petTokenId={tokenId}
+      />
+    </>
   );
 };
 
