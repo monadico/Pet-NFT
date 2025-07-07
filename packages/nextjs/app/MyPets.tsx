@@ -1,16 +1,17 @@
 "use client";
 
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import deployedContracts from "../contracts/deployedContracts";
 import { useEffect, useState } from "react";
 import { createPublicClient, http, parseAbiItem } from "viem";
 import { monadTestnet } from "./providers";
 import { AddHistoryModal } from "../components/AddHistoryModal";
 import { PetHistoryList } from "../components/PetHistoryList";
+import { useAuth } from "../hooks/useAuth";
 import Image from "next/image";
 
 const PetNFTABI = deployedContracts[10143].PetNFT.abi;
-const PetNFTAddress = "0x4d834963624Cb1A6f2C7FDFF968cAF0d867050a8";
+const PetNFTAddress = "0x4d834963624Cb1A6f2C7FDFF968cAF0d867050a8" as `0x${string}`;
 
 interface Pet {
   name: string;
@@ -95,7 +96,7 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
 };
 
 export const MyPets = () => {
-  const { address } = useAccount();
+  const { address } = useAuth();
   const [ownedTokens, setOwnedTokens] = useState<bigint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +120,7 @@ export const MyPets = () => {
           address: PetNFTAddress,
           abi: PetNFTABI,
           functionName: "balanceOf",
-          args: [address],
+          args: [address as `0x${string}`],
         });
 
         if (Number(balance) === 0) {
@@ -139,7 +140,7 @@ export const MyPets = () => {
             event: parseAbiItem(
               "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
             ),
-            args: { to: address },
+            args: { to: address as `0x${string}` },
             fromBlock: fromBlock,
             toBlock: toBlock,
           });

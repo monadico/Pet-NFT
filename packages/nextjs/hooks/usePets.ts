@@ -1,5 +1,5 @@
 import { useScaffoldReadContract } from "./scaffold-eth";
-import { useAccount } from "wagmi";
+import { useAuth } from "./useAuth";
 
 export interface Pet {
   tokenId: bigint;
@@ -7,7 +7,7 @@ export interface Pet {
 }
 
 export const usePets = () => {
-  const { address } = useAccount();
+  const { address } = useAuth();
 
   // Get user's pet balance
   const { data: balance } = useScaffoldReadContract({

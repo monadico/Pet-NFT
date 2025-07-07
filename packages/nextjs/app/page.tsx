@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract } from "wagmi";
 import deployedContracts from "../contracts/deployedContracts";
 import { MyPets } from "./MyPets";
+import { useAuth } from "../hooks/useAuth";
+import { useUnifiedTransaction } from "../hooks/useUnifiedTransaction";
 
 // NOTE: This will be a new component we create in the next step
 // import { MyPets } from "./MyPets"; 
@@ -20,8 +21,8 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { address: connectedAddress } = useAccount();
-  const { writeContract, isPending, isSuccess, error } = useWriteContract();
+  const { address: connectedAddress, authMethod } = useAuth();
+  const { writeContract, isPending, isSuccess, error } = useUnifiedTransaction();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +54,17 @@ export default function Home() {
       }
       const imageURI = `https://gateway.pinata.cloud/ipfs/${resData.IpfsHash}`;
 
-      writeContract({
+      await writeContract({
         address: PetNFTAddress,
         abi: PetNFTABI,
         functionName: "safeMint",
         args: [connectedAddress, petName, petOwner, petBirth, imageURI],
       });
+      
+      // For Privy transactions, show success message immediately
+      if (authMethod === 'email') {
+        alert("🎉 NFT minted instantly! No approval needed - your Pet NFT is being created.");
+      }
     } catch (e) {
       console.error(e);
       alert(`Error uploading to IPFS: ${e instanceof Error ? e.message : String(e)}`);
@@ -98,6 +104,31 @@ export default function Home() {
             <h1 className="text-2xl font-bold mb-6 text-center text-black">
               Mint Your Pet NFT
             </h1>
+            
+            {/* Experience Info Box */}
+            <div className={`mb-4 p-3 rounded-lg text-sm ${
+              authMethod === 'email' 
+                ? 'bg-green-50 border border-green-200' 
+                : 'bg-blue-50 border border-blue-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">
+                  {authMethod === 'email' ? '⚡' : '🔗'}
+                </span>
+                <div>
+                  <p className="font-medium">
+                    {authMethod === 'email' 
+                      ? 'Instant Minting Experience' 
+                      : 'Traditional Wallet Experience'}
+                  </p>
+                  <p className="text-gray-600">
+                    {authMethod === 'email' 
+                      ? 'No transaction approval needed - mint instantly!' 
+                      : 'You\'ll need to approve the transaction in your wallet'}
+                  </p>
+                </div>
+              </div>
+            </div>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label htmlFor="petName" className="block text-gray-700 text-sm font-bold mb-2">Pet Name</label>
@@ -117,13 +148,17 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-center">
                 <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-gray-400" disabled={isUploading || isPending}>
-                  {isUploading ? "Uploading..." : isPending ? "Minting..." : "Mint NFT"}
+                  {isUploading ? "Uploading..." : 
+                   isPending ? (authMethod === 'email' ? "Minting..." : "Approve & Mint...") : 
+                   authMethod === 'email' ? "Mint NFT (Auto-Approved)" : "Mint NFT"}
                 </button>
               </div>
             </form>
             {isSuccess && (
               <p className="mt-4 text-green-500 text-center">
-                NFT minted successfully!
+                {authMethod === 'email' 
+                  ? "🎉 NFT minted instantly! Check 'My Pets' tab." 
+                  : "NFT minted successfully!"}
               </p>
             )}
             {error && (

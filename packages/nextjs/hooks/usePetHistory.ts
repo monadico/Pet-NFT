@@ -1,5 +1,5 @@
 import { useScaffoldReadContract, useScaffoldWriteContract } from "./scaffold-eth";
-import { useAccount } from "wagmi";
+import { useAuth } from "./useAuth";
 
 export interface HistoryItem {
   title: string;
@@ -12,7 +12,7 @@ export interface HistoryItem {
 }
 
 export const usePetHistory = () => {
-  const { address } = useAccount();
+  const { address } = useAuth();
 
   // Hook for writing to the contract
   const { writeContractAsync: writeHistoryContract } = useScaffoldWriteContract({

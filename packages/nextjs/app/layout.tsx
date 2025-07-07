@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { UnifiedAuthButton } from "../components/UnifiedAuthButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-            <ConnectButton />
+            <UnifiedAuthButton />
           </div>
           {children}
         </Providers>
