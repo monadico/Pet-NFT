@@ -1,13 +1,13 @@
 "use client";
 
-import { useReadContract } from "wagmi";
 import deployedContracts from "../contracts/deployedContracts";
 import { useEffect, useState } from "react";
-import { createPublicClient, http, parseAbiItem } from "viem";
+import { createPublicClient, http } from "viem";
 import { monadTestnet } from "./providers";
 import { AddHistoryModal } from "../components/AddHistoryModal";
 import { PetHistoryList } from "../components/PetHistoryList";
 import { useAuth } from "../hooks/useAuth";
+import { useScaffoldReadContract } from "../hooks/scaffold-eth/useScaffoldReadContract";
 import Image from "next/image";
 
 const PetNFTABI = deployedContracts[10143].PetNFT.abi;
@@ -24,9 +24,8 @@ interface Pet {
 }
 
 const PetCard = ({ tokenId }: { tokenId: bigint }) => {
-  const { data: tokenURI, isLoading: isUriLoading } = useReadContract({
-    address: PetNFTAddress,
-    abi: PetNFTABI,
+  const { data: tokenURI, isLoading: isUriLoading } = useScaffoldReadContract({
+    contractName: "PetNFT",
     functionName: "tokenURI",
     args: [tokenId],
   });
@@ -52,7 +51,26 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
     }
   }, [tokenURI, mounted]);
 
-  if (!mounted || isUriLoading || !pet) {
+  // Show skeleton immediately when mounted (even before contract call)
+  if (!mounted) {
+    return (
+      <div className="card-monad animate-pulse">
+        <div className="w-full h-48 rounded-2xl" 
+             style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+        <div className="mt-6 space-y-3">
+          <div className="h-6 rounded-2xl w-3/4" 
+               style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+          <div className="h-4 rounded-2xl w-1/2" 
+               style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+          <div className="h-4 rounded-2xl w-2/3" 
+               style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading skeleton while fetching data
+  if (isUriLoading || !pet) {
     return (
       <div className="card-monad animate-pulse">
         <div className="w-full h-48 rounded-2xl" 
@@ -162,6 +180,7 @@ export const MyPets = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -178,18 +197,23 @@ export const MyPets = () => {
 
       setIsLoading(true);
       setError(null);
+      setLoadingProgress(10);
+      
       try {
         const publicClient = createPublicClient({
           chain: monadTestnet,
           transport: http(),
         });
 
+        // Step 1: Get balance
         const balance = await publicClient.readContract({
           address: PetNFTAddress,
           abi: PetNFTABI,
           functionName: "balanceOf",
           args: [address as `0x${string}`],
         });
+        
+        setLoadingProgress(30);
 
         if (Number(balance) === 0) {
           setOwnedTokens([]);
@@ -197,34 +221,79 @@ export const MyPets = () => {
           return;
         }
 
-        const tokenIds: bigint[] = [];
-        let toBlock = await publicClient.getBlockNumber();
+        setLoadingProgress(50);
 
-        while (tokenIds.length < Number(balance) && toBlock > 0n) {
-          const fromBlock = toBlock - 99n > 0n ? toBlock - 99n : 0n;
-
-          const transferEvents = await publicClient.getLogs({
+        // Step 2: Try to get total supply, with fallback
+        let totalTokens = 0;
+        try {
+          const totalSupply = await publicClient.readContract({
             address: PetNFTAddress,
-            event: parseAbiItem(
-              "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
-            ),
-            args: { to: address as `0x${string}` },
-            fromBlock: fromBlock,
-            toBlock: toBlock,
+            abi: PetNFTABI,
+            functionName: "totalSupply",
+            args: [],
           });
-
-          const newIds = transferEvents.map((event) => event.args.tokenId!);
-          for (const id of newIds) {
-            if (!tokenIds.includes(id)) {
-              tokenIds.push(id);
-            }
-          }
-
-          if (fromBlock === 0n) break;
-          toBlock = fromBlock - 1n;
+          totalTokens = Number(totalSupply);
+        } catch (totalSupplyError) {
+          console.log("totalSupply not available, using fallback approach:", totalSupplyError);
+          // Fallback: assume a reasonable maximum range (e.g., 1000 tokens)
+          // In production, you might want to make this configurable
+          totalTokens = 1000;
         }
 
-        setOwnedTokens(tokenIds);
+        // Step 3: Check ownership of tokens
+        const ownedTokenIds: bigint[] = [];
+        
+        // Process tokens in smaller batches to avoid overwhelming the RPC
+        const batchSize = 5; // Reduced batch size for better reliability
+        for (let i = 0; i < totalTokens; i += batchSize) {
+          const batch = [];
+          const endIndex = Math.min(i + batchSize, totalTokens);
+          
+          // Create batch of ownership checks
+          for (let tokenId = i; tokenId < endIndex; tokenId++) {
+            batch.push(
+              publicClient.readContract({
+                address: PetNFTAddress,
+                abi: PetNFTABI,
+                functionName: "ownerOf",
+                args: [BigInt(tokenId)],
+              }).then(owner => ({ tokenId: BigInt(tokenId), owner, exists: true }))
+              .catch((error) => {
+                // Token might not exist or other error
+                console.log(`Token ${tokenId} check failed:`, error.message);
+                return { tokenId: BigInt(tokenId), owner: null, exists: false };
+              })
+            );
+          }
+          
+          // Execute batch in parallel
+          const results = await Promise.all(batch);
+          
+          // Filter for tokens owned by current address
+          for (const result of results) {
+            if (result.exists && result.owner && result.owner.toLowerCase() === address.toLowerCase()) {
+              ownedTokenIds.push(result.tokenId);
+            }
+          }
+          
+          // Update progress
+          const progress = 50 + (i / totalTokens) * 40; // 50-90% range
+          setLoadingProgress(Math.min(90, progress));
+          
+          // Early exit if we found all tokens
+          if (ownedTokenIds.length === Number(balance)) {
+            console.log(`Found all ${Number(balance)} tokens, stopping search at token ${i + batchSize - 1}`);
+            break;
+          }
+          
+          // Add a small delay between batches to be nice to the RPC
+          if (i + batchSize < totalTokens) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+
+        setLoadingProgress(100);
+        setOwnedTokens(ownedTokenIds);
       } catch (e) {
         console.error("Failed to fetch owned tokens", e);
         setError(e instanceof Error ? e.message : "An unknown error occurred.");
@@ -238,12 +307,44 @@ export const MyPets = () => {
 
   if (!mounted || isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"
-             style={{ borderColor: '#836ef9' }}></div>
-        <p className="text-lg" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
-          Loading patient records...
-        </p>
+      <div className="space-y-8">
+        {/* Show progress and immediate skeletons */}
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mb-4"
+               style={{ borderColor: '#836ef9' }}></div>
+          <p className="text-lg mb-2" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+            Loading patient records...
+          </p>
+          {loadingProgress > 0 && (
+            <div className="w-64 bg-gray-200 rounded-full h-2">
+              <div 
+                className="h-2 rounded-full transition-all duration-300" 
+                style={{ 
+                  backgroundColor: '#836ef9', 
+                  width: `${loadingProgress}%` 
+                }}
+              ></div>
+            </div>
+          )}
+        </div>
+        
+        {/* Show skeleton cards immediately */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card-monad animate-pulse">
+              <div className="w-full h-48 rounded-2xl" 
+                   style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+              <div className="mt-6 space-y-3">
+                <div className="h-6 rounded-2xl w-3/4" 
+                     style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+                <div className="h-4 rounded-2xl w-1/2" 
+                     style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+                <div className="h-4 rounded-2xl w-2/3" 
+                     style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

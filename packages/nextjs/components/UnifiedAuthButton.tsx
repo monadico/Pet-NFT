@@ -11,10 +11,35 @@ export const UnifiedAuthButton = () => {
   const { connectors, connect } = useConnect();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed: ', fallbackErr);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   const handleDisconnect = () => {
     if (authMethod === "email") {
@@ -57,8 +82,26 @@ export const UnifiedAuthButton = () => {
             {authMethod === "email" ? "Email Account" : "Wallet Connected"}
           </span>
         </div>
-        <div className="text-sm font-mono" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
-          {address.slice(0, 6)}...{address.slice(-4)}
+        <div className="relative group">
+          <button
+            onClick={() => copyToClipboard(address)}
+            className="text-sm font-mono px-3 py-1 rounded-full transition-all duration-200 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            style={{ color: 'rgba(14, 16, 15, 0.7)' }}
+            title="Click to copy full address"
+          >
+            {address.slice(0, 6)}...{address.slice(-4)}
+            <span className="ml-1 opacity-50 group-hover:opacity-100 transition-opacity">
+              📋
+            </span>
+          </button>
+          
+          {/* Copy feedback tooltip */}
+          {copied && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-green-600 text-white text-xs rounded-md whitespace-nowrap z-10">
+              Copied to clipboard!
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-green-600"></div>
+            </div>
+          )}
         </div>
         <button
           onClick={handleDisconnect}
@@ -81,7 +124,7 @@ export const UnifiedAuthButton = () => {
       </button>
 
       {showAuthModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50"
              style={{ 
                position: 'fixed',
                top: 0,
@@ -91,13 +134,18 @@ export const UnifiedAuthButton = () => {
                zIndex: 9999,
                display: 'flex',
                alignItems: 'center',
-               justifyContent: 'center'
+               justifyContent: 'center',
+               padding: '1rem',
+               minHeight: '100vh',
+               minWidth: '100vw'
              }}>
-          <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden relative"
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden relative mx-auto"
                style={{ 
                  boxShadow: '0 20px 60px rgba(131, 110, 249, 0.3)',
                  maxHeight: '90vh',
-                 overflowY: 'auto'
+                 overflowY: 'auto',
+                 margin: 'auto',
+                 transform: 'translateZ(0)' // Force hardware acceleration for better centering
                }}>
             {/* Header */}
             <div className="px-6 py-4"
