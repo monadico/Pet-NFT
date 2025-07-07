@@ -18,10 +18,5 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "env": {
-    "NEXT_PUBLIC_PINATA_JWT": "@pinata_jwt",
-    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": "@walletconnect_project_id",
-    "NEXT_PUBLIC_PRIVY_APP_ID": "@privy_app_id"
-  }
+  ]
 } 
