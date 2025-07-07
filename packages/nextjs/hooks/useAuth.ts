@@ -27,6 +27,7 @@ export interface UnifiedAuthState {
 
 export const useAuth = (): UnifiedAuthState => {
   const [authMethod, setAuthMethod] = useState<'wallet' | 'email' | null>(null);
+  const [mounted, setMounted] = useState(false);
   
   // Wagmi hooks (for traditional wallet connections)
   const wagmiAccount = useAccount();
@@ -41,8 +42,17 @@ export const useAuth = (): UnifiedAuthState => {
     logout: privyLogout 
   } = usePrivy();
   
+  // Handle mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
   // Determine the active authentication method and address
   const getActiveAuth = () => {
+    if (!mounted) {
+      return { method: null, address: undefined };
+    }
+    
     if (wagmiConnected && wagmiAddress) {
       return { method: 'wallet' as const, address: wagmiAddress };
     }
@@ -58,8 +68,10 @@ export const useAuth = (): UnifiedAuthState => {
   
   // Update auth method when it changes
   useEffect(() => {
-    setAuthMethod(method);
-  }, [method]);
+    if (mounted) {
+      setAuthMethod(method);
+    }
+  }, [method, mounted]);
   
   // Unified disconnect function
   const disconnect = () => {
@@ -70,8 +82,8 @@ export const useAuth = (): UnifiedAuthState => {
     }
   };
   
-  const isConnected = wagmiConnected || privyAuthenticated;
-  const isLoading = !privyReady;
+  const isConnected = mounted && (wagmiConnected || privyAuthenticated);
+  const isLoading = !mounted || !privyReady;
   
   return {
     isConnected,

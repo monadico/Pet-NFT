@@ -34,9 +34,14 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
   const [pet, setPet] = useState<Pet | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showAddHistory, setShowAddHistory] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (tokenURI) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (tokenURI && mounted) {
       try {
         const dataUri = tokenURI as string;
         const json = atob(dataUri.substring(dataUri.indexOf(",") + 1));
@@ -45,52 +50,108 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
         console.error("Failed to parse token URI", e);
       }
     }
-  }, [tokenURI]);
+  }, [tokenURI, mounted]);
 
-  if (isUriLoading || !pet) {
+  if (!mounted || isUriLoading || !pet) {
     return (
-      <div className="border p-4 rounded-lg shadow animate-pulse">
-        <div className="w-full h-48 bg-gray-300 rounded"></div>
-        <div className="mt-4 h-6 bg-gray-300 rounded w-3/4"></div>
-        <div className="mt-2 h-4 bg-gray-300 rounded w-1/2"></div>
+      <div className="card-monad animate-pulse">
+        <div className="w-full h-48 rounded-2xl" 
+             style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+        <div className="mt-6 space-y-3">
+          <div className="h-6 rounded-2xl w-3/4" 
+               style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+          <div className="h-4 rounded-2xl w-1/2" 
+               style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+          <div className="h-4 rounded-2xl w-2/3" 
+               style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
+        </div>
       </div>
     );
   }
 
   return (
     <>
-    <div className="border p-4 rounded-lg shadow">
-        <Image src={pet.image} alt={pet.name} width={400} height={192} className="w-full h-48 object-cover rounded" />
-      <h3 className="text-xl font-bold mt-4">{pet.name}</h3>
-      {pet.attributes.map((attr, i) => (
-        <p key={i} className="text-sm">
-          <strong>{attr.trait_type}:</strong> {attr.value}
-        </p>
-      ))}
-        
-        <div className="mt-4 space-y-2">
-          <button
-            onClick={() => setShowAddHistory(true)}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-          >
-            Add New History
-          </button>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
-          >
-            {showHistory ? "Hide History" : "View History"}
-          </button>
+      <div className="card-monad group">
+        <div className="relative overflow-hidden rounded-2xl">
+          <Image 
+            src={pet.image} 
+            alt={pet.name} 
+            width={400} 
+            height={192} 
+            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
+        
+        <div className="mt-4">
+          <h3 className="text-xl font-bold mb-2 transition-colors duration-200 group-hover:text-purple-600" 
+              style={{ color: '#0e100f' }}>
+            {pet.name}
+          </h3>
+          
+          <div className="space-y-2 mb-4">
+            {pet.attributes.map((attr, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="font-medium" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+                  {attr.trait_type}:
+                </span>
+                <span className="text-black px-2 py-1 rounded-full" 
+                      style={{ 
+                        backgroundColor: 'rgba(131, 110, 249, 0.1)',
+                        color: '#0e100f'
+                      }}>
+                  {attr.value}
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowAddHistory(true)}
+              className="w-full btn-monad"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <span>🏥</span>
+                Add Medical Record
+              </span>
+            </button>
+            
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="w-full font-medium py-2 px-4 rounded-2xl border-2 transition-all duration-200 focus:outline-none hover:bg-purple-600 hover:text-white focus:ring-2 focus:ring-purple-300"
+              style={{
+                backgroundColor: 'white',
+                color: '#836ef9',
+                borderColor: '#836ef9'
+              }}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <span>{showHistory ? "📋" : "📊"}</span>
+                {showHistory ? "Hide Medical History" : "View Medical History"}
+              </span>
+            </button>
+          </div>
 
-        {showHistory && <PetHistoryList petTokenId={tokenId} />}
-    </div>
+          {showHistory && (
+            <div className="mt-4 p-4 rounded-2xl border"
+                 style={{ 
+                   backgroundColor: '#fbfaf9',
+                   borderColor: 'rgba(131, 110, 249, 0.2)'
+                 }}>
+              <PetHistoryList petTokenId={tokenId} />
+            </div>
+          )}
+        </div>
+      </div>
 
-      <AddHistoryModal
-        isOpen={showAddHistory}
-        onClose={() => setShowAddHistory(false)}
-        petTokenId={tokenId}
-      />
+      {mounted && (
+        <AddHistoryModal
+          isOpen={showAddHistory}
+          onClose={() => setShowAddHistory(false)}
+          petTokenId={tokenId}
+        />
+      )}
     </>
   );
 };
@@ -100,8 +161,15 @@ export const MyPets = () => {
   const [ownedTokens, setOwnedTokens] = useState<bigint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const fetchOwnedPets = async () => {
       if (!address) {
         setIsLoading(false);
@@ -166,30 +234,74 @@ export const MyPets = () => {
     };
 
     fetchOwnedPets();
-  }, [address]);
+  }, [address, mounted]);
 
-  if (isLoading) {
-    return <p className="text-center">Loading your pets...</p>;
+  if (!mounted || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4"
+             style={{ borderColor: '#836ef9' }}></div>
+        <p className="text-lg" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+          Loading patient records...
+        </p>
+      </div>
+    );
   }
   
   if (error) {
-    return <p className="text-center text-red-500">Error: {error}</p>;
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 bg-red-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <span className="text-2xl">⚠️</span>
+        </div>
+        <p className="text-red-600 font-medium mb-2">Oops! Something went wrong</p>
+        <p style={{ color: 'rgba(14, 16, 15, 0.7)' }}>{error}</p>
+      </div>
+    );
   }
 
   if (!address) {
     return (
-      <p className="text-center text-gray-500">Please connect your wallet.</p>
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+             style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}>
+          <span className="text-2xl">🔗</span>
+        </div>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: '#0e100f' }}>
+          Connect Your Wallet
+        </h3>
+        <p style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+          Please connect your account to access patient records.
+        </p>
+      </div>
     );
   }
 
   if (ownedTokens.length === 0) {
     return (
-      <p className="text-center text-gray-500">You do not own any pets yet.</p>
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+             style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}>
+          <span className="text-2xl">🐾</span>
+        </div>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: '#0e100f' }}>
+          No Patient Records Yet
+        </h3>
+        <p className="mb-4" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+          You haven&apos;t registered any patients yet. Start by registering your first patient to begin their medical record!
+        </p>
+        <button 
+          onClick={() => window.location.href = '/#mint'}
+          className="btn-monad"
+        >
+          Register First Patient
+        </button>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {ownedTokens.map((tokenId) => (
         <PetCard key={tokenId.toString()} tokenId={tokenId} />
       ))}

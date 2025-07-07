@@ -1,5 +1,7 @@
-import { useScaffoldReadContract, useScaffoldWriteContract } from "./scaffold-eth";
+import { useScaffoldReadContract } from "./scaffold-eth";
 import { useAuth } from "./useAuth";
+import { useUnifiedTransaction } from "./useUnifiedTransaction";
+import deployedContracts from "../contracts/deployedContracts";
 
 export interface HistoryItem {
   title: string;
@@ -12,12 +14,8 @@ export interface HistoryItem {
 }
 
 export const usePetHistory = () => {
-  const { address } = useAuth();
-
-  // Hook for writing to the contract
-  const { writeContractAsync: writeHistoryContract } = useScaffoldWriteContract({
-    contractName: "PetHistoryNFT",
-  });
+  const { address, isConnected } = useAuth();
+  const { writeContract } = useUnifiedTransaction();
 
   // Function to mint a new history item
   const mintHistoryItem = async (
@@ -28,9 +26,15 @@ export const usePetHistory = () => {
     parentContract: string,
     parentTokenId: bigint,
   ) => {
-    if (!address) throw new Error("Wallet not connected");
+    if (!isConnected || !address) {
+      throw new Error("Please connect your account first");
+    }
 
-    return await writeHistoryContract({
+    const contractInfo = deployedContracts[10143].PetHistoryNFT;
+    
+    return await writeContract({
+      address: contractInfo.address,
+      abi: contractInfo.abi,
       functionName: "mintHistoryItem",
       args: [address, title, description, fileURI, fileType, parentContract, parentTokenId],
     });

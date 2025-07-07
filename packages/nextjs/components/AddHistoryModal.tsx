@@ -71,7 +71,7 @@ export const AddHistoryModal = ({ isOpen, onClose, petTokenId }: AddHistoryModal
       setSelectedFile(null);
       onClose();
       
-      alert("History item added successfully!");
+      alert("Medical record added successfully!");
     } catch (error) {
       console.error("Error adding history item:", error);
       alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -104,88 +104,172 @@ export const AddHistoryModal = ({ isOpen, onClose, petTokenId }: AddHistoryModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-black">Add New History</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-            disabled={isSubmitting}
-          >
-            ✕
-          </button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md transform transition-all duration-300 scale-100"
+           style={{ boxShadow: '0 12px 40px rgba(131, 110, 249, 0.3)' }}>
+        {/* Header */}
+        <div className="text-white p-6 rounded-t-2xl"
+             style={{ background: 'linear-gradient(135deg, #836ef9 0%, #200052 100%)' }}>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <span>🏥</span>
+              Add Medical Record
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-full p-1"
+              disabled={isSubmitting}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-white/80 mt-2 text-sm">
+            Add consultation data, exam results, or medical documents
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
-              Title
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div>
+            <label htmlFor="title" className="block font-medium mb-2" style={{ color: '#0e100f' }}>
+              Record Title
             </label>
             <input
               type="text"
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="w-full px-4 py-3 rounded-2xl border transition-all duration-200"
+              style={{
+                borderColor: 'rgba(131, 110, 249, 0.2)',
+              }}
+              onFocus={(e) => {
+                e.target.style.outline = 'none';
+                e.target.style.borderColor = '#836ef9';
+                e.target.style.boxShadow = '0 0 0 3px rgba(131, 110, 249, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(131, 110, 249, 0.2)';
+                e.target.style.boxShadow = 'none';
+              }}
+              placeholder="e.g., Annual Checkup, Vaccination Record, Lab Results"
               required
               disabled={isSubmitting}
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
-              Description
+          <div>
+            <label htmlFor="description" className="block font-medium mb-2" style={{ color: '#0e100f' }}>
+              Clinical Notes
             </label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              rows={4}
+              className="w-full px-4 py-3 rounded-2xl border transition-all duration-200 resize-none"
+              style={{
+                borderColor: 'rgba(131, 110, 249, 0.2)',
+              }}
+              onFocus={(e) => {
+                e.target.style.outline = 'none';
+                e.target.style.borderColor = '#836ef9';
+                e.target.style.boxShadow = '0 0 0 3px rgba(131, 110, 249, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(131, 110, 249, 0.2)';
+                e.target.style.boxShadow = 'none';
+              }}
+              placeholder="Enter examination findings, treatment notes, recommendations, or consultation details..."
               required
               disabled={isSubmitting}
             />
           </div>
 
-          <div className="mb-6">
-            <label htmlFor="file" className="block text-gray-700 text-sm font-bold mb-2">
-              File (Image or PDF)
+          <div>
+            <label htmlFor="file" className="block font-medium mb-2" style={{ color: '#0e100f' }}>
+              Medical Document or X-Ray
             </label>
-            <input
-              type="file"
-              id="file"
-              onChange={handleFileChange}
-              accept="image/*,application/pdf"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <input
+                type="file"
+                id="file"
+                onChange={handleFileChange}
+                accept="image/*,application/pdf"
+                className="w-full px-4 py-3 rounded-2xl border transition-all duration-200"
+                style={{
+                  borderColor: 'rgba(131, 110, 249, 0.2)',
+                }}
+                required
+                disabled={isSubmitting}
+              />
+            </div>
             {selectedFile && (
-              <p className="text-sm text-gray-600 mt-1">
-                Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
+              <div className="mt-2 p-3 rounded-2xl" style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}>
+                <div className="flex items-center gap-2 text-sm" style={{ color: '#0e100f' }}>
+                  <span style={{ color: '#836ef9' }}>📎</span>
+                  <span className="font-medium">{selectedFile.name}</span>
+                  <span style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+                    ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+              </div>
             )}
+            <p className="text-xs mt-2" style={{ color: 'rgba(14, 16, 15, 0.6)' }}>
+              Supported formats: JPEG, PNG, GIF, WebP, PDF (max 10MB)
+            </p>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          {/* Submit Button */}
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              className="flex-1 px-6 py-3 rounded-2xl border transition-all duration-200 font-medium"
+              style={{
+                backgroundColor: 'white',
+                color: 'rgba(14, 16, 15, 0.7)',
+                borderColor: 'rgba(131, 110, 249, 0.2)',
+              }}
               disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+              className="flex-1 btn-monad disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
-              {isUploading ? "Uploading..." : isSubmitting ? "Adding..." : "Add History"}
+              {isUploading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Uploading...
+                </span>
+              ) : isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Creating...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <span>🏥</span>
+                  Add Medical Record
+                </span>
+              )}
             </button>
           </div>
         </form>
+
+        {/* Footer note */}
+        <div className="px-6 pb-6">
+          <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(131, 110, 249, 0.05)' }}>
+            <p className="text-xs text-center" style={{ color: 'rgba(14, 16, 15, 0.6)' }}>
+              Medical records are stored permanently on IPFS and blockchain for tamper-proof preservation
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
