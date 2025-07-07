@@ -5,7 +5,6 @@ import deployedContracts from "../contracts/deployedContracts";
 import { MyPets } from "./MyPets";
 import { useAuth } from "../hooks/useAuth";
 import { useUnifiedTransaction } from "../hooks/useUnifiedTransaction";
-import { PetCarousel } from "../components/PetCarousel";
 import Link from "next/link";
 
 // NOTE: This will be a new component we create in the next step
@@ -161,11 +160,6 @@ export default function Home() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Pet Carousel Section */}
-      <div style={{ backgroundColor: '#fbfaf9' }}>
-        <PetCarousel />
       </div>
 
       {/* Minting/Viewing Section */}

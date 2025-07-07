@@ -1,17 +1,12 @@
 "use client";
 
-import deployedContracts from "../contracts/deployedContracts";
 import { useEffect, useState } from "react";
-import { createPublicClient, http } from "viem";
-import { monadTestnet } from "./providers";
 import { AddHistoryModal } from "../components/AddHistoryModal";
 import { PetHistoryList } from "../components/PetHistoryList";
 import { useAuth } from "../hooks/useAuth";
 import { useScaffoldReadContract } from "../hooks/scaffold-eth/useScaffoldReadContract";
 import Image from "next/image";
-
-const PetNFTABI = deployedContracts[10143].PetNFT.abi;
-const PetNFTAddress = "0x4d834963624Cb1A6f2C7FDFF968cAF0d867050a8" as `0x${string}`;
+import { usePetsData } from "../hooks/usePetsData";
 
 interface Pet {
   name: string;
@@ -176,134 +171,15 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
 
 export const MyPets = () => {
   const { address } = useAuth();
-  const [ownedTokens, setOwnedTokens] = useState<bigint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { ownedTokens, isLoading, error, lastUpdated, refreshPets } = usePetsData();
   const [mounted, setMounted] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-
-    const fetchOwnedPets = async () => {
-      if (!address) {
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-      setLoadingProgress(10);
-      
-      try {
-        const publicClient = createPublicClient({
-          chain: monadTestnet,
-          transport: http(),
-        });
-
-        // Step 1: Get balance
-        const balance = await publicClient.readContract({
-          address: PetNFTAddress,
-          abi: PetNFTABI,
-          functionName: "balanceOf",
-          args: [address as `0x${string}`],
-        });
-        
-        setLoadingProgress(30);
-
-        if (Number(balance) === 0) {
-          setOwnedTokens([]);
-          setIsLoading(false);
-          return;
-        }
-
-        setLoadingProgress(50);
-
-        // Step 2: Try to get total supply, with fallback
-        let totalTokens = 0;
-        try {
-          const totalSupply = await publicClient.readContract({
-            address: PetNFTAddress,
-            abi: PetNFTABI,
-            functionName: "totalSupply",
-            args: [],
-          });
-          totalTokens = Number(totalSupply);
-        } catch (totalSupplyError) {
-          console.log("totalSupply not available, using fallback approach:", totalSupplyError);
-          // Fallback: assume a reasonable maximum range (e.g., 1000 tokens)
-          // In production, you might want to make this configurable
-          totalTokens = 1000;
-        }
-
-        // Step 3: Check ownership of tokens
-        const ownedTokenIds: bigint[] = [];
-        
-        // Process tokens in smaller batches to avoid overwhelming the RPC
-        const batchSize = 5; // Reduced batch size for better reliability
-        for (let i = 0; i < totalTokens; i += batchSize) {
-          const batch = [];
-          const endIndex = Math.min(i + batchSize, totalTokens);
-          
-          // Create batch of ownership checks
-          for (let tokenId = i; tokenId < endIndex; tokenId++) {
-            batch.push(
-              publicClient.readContract({
-                address: PetNFTAddress,
-                abi: PetNFTABI,
-                functionName: "ownerOf",
-                args: [BigInt(tokenId)],
-              }).then(owner => ({ tokenId: BigInt(tokenId), owner, exists: true }))
-              .catch((error) => {
-                // Token might not exist or other error
-                console.log(`Token ${tokenId} check failed:`, error.message);
-                return { tokenId: BigInt(tokenId), owner: null, exists: false };
-              })
-            );
-          }
-          
-          // Execute batch in parallel
-          const results = await Promise.all(batch);
-          
-          // Filter for tokens owned by current address
-          for (const result of results) {
-            if (result.exists && result.owner && result.owner.toLowerCase() === address.toLowerCase()) {
-              ownedTokenIds.push(result.tokenId);
-            }
-          }
-          
-          // Update progress
-          const progress = 50 + (i / totalTokens) * 40; // 50-90% range
-          setLoadingProgress(Math.min(90, progress));
-          
-          // Early exit if we found all tokens
-          if (ownedTokenIds.length === Number(balance)) {
-            console.log(`Found all ${Number(balance)} tokens, stopping search at token ${i + batchSize - 1}`);
-            break;
-          }
-          
-          // Add a small delay between batches to be nice to the RPC
-          if (i + batchSize < totalTokens) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-
-        setLoadingProgress(100);
-        setOwnedTokens(ownedTokenIds);
-      } catch (e) {
-        console.error("Failed to fetch owned tokens", e);
-        setError(e instanceof Error ? e.message : "An unknown error occurred.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOwnedPets();
-  }, [address, mounted]);
+  // Show refresh button if data is older than 1 minute
+  const isDataStale = lastUpdated && (Date.now() - lastUpdated.getTime()) > 60000;
 
   if (!mounted || isLoading) {
     return (
@@ -315,17 +191,6 @@ export const MyPets = () => {
           <p className="text-lg mb-2" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
             Loading patient records...
           </p>
-          {loadingProgress > 0 && (
-            <div className="w-64 bg-gray-200 rounded-full h-2">
-              <div 
-                className="h-2 rounded-full transition-all duration-300" 
-                style={{ 
-                  backgroundColor: '#836ef9', 
-                  width: `${loadingProgress}%` 
-                }}
-              ></div>
-            </div>
-          )}
         </div>
         
         {/* Show skeleton cards immediately */}
@@ -356,7 +221,13 @@ export const MyPets = () => {
           <span className="text-2xl">⚠️</span>
         </div>
         <p className="text-red-600 font-medium mb-2">Oops! Something went wrong</p>
-        <p style={{ color: 'rgba(14, 16, 15, 0.7)' }}>{error}</p>
+        <p className="mb-4" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>{error}</p>
+        <button 
+          onClick={refreshPets}
+          className="btn-monad"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -391,21 +262,62 @@ export const MyPets = () => {
         <p className="mb-4" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
           You haven&apos;t registered any patients yet. Start by registering your first patient to begin their medical record!
         </p>
-        <button 
-          onClick={() => window.location.href = '/#mint'}
-          className="btn-monad"
-        >
-          Register First Patient
-        </button>
+        <div className="space-y-3">
+          <button 
+            onClick={() => window.location.href = '/#mint'}
+            className="btn-monad"
+          >
+            Register First Patient
+          </button>
+          {isDataStale && (
+            <button 
+              onClick={refreshPets}
+              className="block mx-auto text-sm px-4 py-2 rounded-full border transition-all duration-200 hover:bg-purple-50"
+              style={{ color: '#836ef9', borderColor: '#836ef9' }}
+            >
+              🔄 Refresh Data
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {ownedTokens.map((tokenId) => (
-        <PetCard key={tokenId.toString()} tokenId={tokenId} />
-      ))}
+    <div className="space-y-6">
+      {/* Data status and refresh controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold" style={{ color: '#0e100f' }}>
+            Patient Records ({ownedTokens.length})
+          </h2>
+          {lastUpdated && (
+            <span className="text-sm px-3 py-1 rounded-full" 
+                  style={{ 
+                    backgroundColor: 'rgba(131, 110, 249, 0.1)',
+                    color: 'rgba(14, 16, 15, 0.7)'
+                  }}>
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
+        <button 
+          onClick={refreshPets}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 hover:bg-purple-50 disabled:opacity-50"
+          style={{ color: '#836ef9', borderColor: '#836ef9' }}
+        >
+          <span className={isLoading ? 'animate-spin' : ''}>🔄</span>
+          {isLoading ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
+
+      {/* Pets grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {ownedTokens.map((tokenId) => (
+          <PetCard key={tokenId.toString()} tokenId={tokenId} />
+        ))}
+      </div>
     </div>
   );
 }; 

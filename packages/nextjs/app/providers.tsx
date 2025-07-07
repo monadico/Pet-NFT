@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { PrivyProvider } from "@privy-io/react-auth";
+import { PetsProviderWrapper } from "../components/PetsProviderWrapper";
 import "@rainbow-me/rainbowkit/styles.css";
 
 export const monadTestnet = {
@@ -53,7 +54,11 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
     >
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>{children}</RainbowKitProvider>
+          <RainbowKitProvider>
+            <PetsProviderWrapper>
+              {children}
+            </PetsProviderWrapper>
+          </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </PrivyProvider>
