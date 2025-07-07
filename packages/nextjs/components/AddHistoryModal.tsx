@@ -104,9 +104,24 @@ export const AddHistoryModal = ({ isOpen, onClose, petTokenId }: AddHistoryModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md transform transition-all duration-300 scale-100"
-           style={{ boxShadow: '0 12px 40px rgba(131, 110, 249, 0.3)' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+         style={{ 
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0,
+           zIndex: 9999,
+           display: 'flex',
+           alignItems: 'center',
+           justifyContent: 'center'
+         }}>
+      <div className="bg-white rounded-2xl w-full max-w-md transform transition-all duration-300 scale-100 relative"
+           style={{ 
+             boxShadow: '0 12px 40px rgba(131, 110, 249, 0.3)',
+             maxHeight: '90vh',
+             overflowY: 'auto'
+           }}>
         {/* Header */}
         <div className="text-white p-6 rounded-t-2xl"
              style={{ background: 'linear-gradient(135deg, #836ef9 0%, #200052 100%)' }}>

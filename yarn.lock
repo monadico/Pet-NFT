@@ -2693,6 +2693,7 @@ __metadata:
     next: 15.3.4
     react: ^19.0.0
     react-dom: ^19.0.0
+    source-map-js: ^1.2.1
     tailwindcss: ^4
     typescript: ^5
     viem: ^2.31.6

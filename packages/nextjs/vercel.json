@@ -1,0 +1,27 @@
+{
+  "name": "petvault-veterinary-records",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next",
+      "config": {
+        "distDir": ".next"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_PINATA_JWT": "@pinata_jwt",
+    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": "@walletconnect_project_id",
+    "NEXT_PUBLIC_PRIVY_APP_ID": "@privy_app_id"
+  }
+} 
