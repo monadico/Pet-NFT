@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AddHistoryModal } from "../components/AddHistoryModal";
 import { PetHistoryList } from "../components/PetHistoryList";
+import { PullToRefresh } from "../components/PullToRefresh";
 import { useAuth } from "../hooks/useAuth";
 import { useScaffoldReadContract } from "../hooks/scaffold-eth/useScaffoldReadContract";
 import Image from "next/image";
@@ -91,18 +92,18 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
             alt={pet.name} 
             width={400} 
             height={192} 
-            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" 
+            className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 group-hover:scale-105" 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
         
-        <div className="mt-4">
-          <h3 className="text-xl font-bold mb-2 transition-colors duration-200 group-hover:text-purple-600" 
+        <div className="mt-3 sm:mt-4">
+          <h3 className="text-lg sm:text-xl font-bold mb-2 transition-colors duration-200 group-hover:text-purple-600" 
               style={{ color: '#0e100f' }}>
             {pet.name}
           </h3>
           
-          <div className="space-y-2 mb-4">
+          <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
             {pet.attributes.map((attr, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
                 <span className="font-medium" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
@@ -119,20 +120,21 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
             ))}
           </div>
           
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowAddHistory(true)}
-              className="w-full btn-monad"
-            >
+                    <div className="space-y-2">
+          <button
+            onClick={() => setShowAddHistory(true)}
+              className="w-full btn-monad text-sm sm:text-base"
+          >
               <span className="flex items-center justify-center gap-2">
                 <span>🏥</span>
-                Add Medical Record
+                <span className="hidden sm:inline">Add Medical Record</span>
+                <span className="sm:hidden">Add Record</span>
               </span>
-            </button>
+          </button>
             
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="w-full font-medium py-2 px-4 rounded-2xl border-2 transition-all duration-200 focus:outline-none hover:bg-purple-600 hover:text-white focus:ring-2 focus:ring-purple-300"
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+              className="w-full font-medium py-2 px-3 sm:px-4 rounded-2xl border-2 transition-all duration-200 focus:outline-none hover:bg-purple-600 hover:text-white focus:ring-2 focus:ring-purple-300 text-sm sm:text-base"
               style={{
                 backgroundColor: 'white',
                 color: '#836ef9',
@@ -141,10 +143,11 @@ const PetCard = ({ tokenId }: { tokenId: bigint }) => {
             >
               <span className="flex items-center justify-center gap-2">
                 <span>{showHistory ? "📋" : "📊"}</span>
-                {showHistory ? "Hide Medical History" : "View Medical History"}
+                <span className="hidden sm:inline">{showHistory ? "Hide Medical History" : "View Medical History"}</span>
+                <span className="sm:hidden">{showHistory ? "Hide History" : "View History"}</span>
               </span>
-            </button>
-          </div>
+          </button>
+        </div>
 
           {showHistory && (
             <div className="mt-4 p-4 rounded-2xl border"
@@ -194,17 +197,17 @@ export const MyPets = () => {
         </div>
         
         {/* Show skeleton cards immediately */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-4 sm:px-0">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card-monad animate-pulse">
-              <div className="w-full h-48 rounded-2xl" 
+              <div className="w-full h-40 sm:h-48 rounded-2xl" 
                    style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
-              <div className="mt-6 space-y-3">
-                <div className="h-6 rounded-2xl w-3/4" 
+              <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3">
+                <div className="h-5 sm:h-6 rounded-2xl w-3/4" 
                      style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
-                <div className="h-4 rounded-2xl w-1/2" 
+                <div className="h-3 sm:h-4 rounded-2xl w-1/2" 
                      style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
-                <div className="h-4 rounded-2xl w-2/3" 
+                <div className="h-3 sm:h-4 rounded-2xl w-2/3" 
                      style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}></div>
               </div>
             </div>
@@ -283,41 +286,44 @@ export const MyPets = () => {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Data status and refresh controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold" style={{ color: '#0e100f' }}>
-            Patient Records ({ownedTokens.length})
-          </h2>
-          {lastUpdated && (
-            <span className="text-sm px-3 py-1 rounded-full" 
-                  style={{ 
-                    backgroundColor: 'rgba(131, 110, 249, 0.1)',
-                    color: 'rgba(14, 16, 15, 0.7)'
-                  }}>
-              Last updated: {lastUpdated.toLocaleTimeString()}
-            </span>
-          )}
+    return (
+    <PullToRefresh onRefresh={async () => { await refreshPets(); }}>
+      <div className="space-y-6">
+        {/* Data status and refresh controls */}
+        <div className="flex items-center justify-between px-4 sm:px-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-bold" style={{ color: '#0e100f' }}>
+              <span className="sm:hidden">Patients ({ownedTokens.length})</span>
+              <span className="hidden sm:inline">Patient Records ({ownedTokens.length})</span>
+            </h2>
+            {lastUpdated && (
+              <span className="text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full hidden sm:inline" 
+                    style={{ 
+                      backgroundColor: 'rgba(131, 110, 249, 0.1)',
+                      color: 'rgba(14, 16, 15, 0.7)'
+                    }}>
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          <button 
+            onClick={refreshPets}
+            disabled={isLoading}
+            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-full border transition-all duration-200 hover:bg-purple-50 disabled:opacity-50 text-sm sm:text-base"
+            style={{ color: '#836ef9', borderColor: '#836ef9' }}
+          >
+            <span className={isLoading ? 'animate-spin' : ''}>🔄</span>
+            <span className="hidden sm:inline">{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
         </div>
-        <button 
-          onClick={refreshPets}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 hover:bg-purple-50 disabled:opacity-50"
-          style={{ color: '#836ef9', borderColor: '#836ef9' }}
-        >
-          <span className={isLoading ? 'animate-spin' : ''}>🔄</span>
-          {isLoading ? 'Refreshing...' : 'Refresh'}
-        </button>
-      </div>
 
-      {/* Pets grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Pets grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-4 sm:px-0">
         {ownedTokens.map((tokenId) => (
           <PetCard key={tokenId.toString()} tokenId={tokenId} />
         ))}
+        </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }; 

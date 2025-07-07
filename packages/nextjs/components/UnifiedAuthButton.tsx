@@ -2,13 +2,11 @@
 
 import { useAuth } from "../hooks/useAuth";
 import { usePrivy } from "@privy-io/react-auth";
-import { useConnect } from "wagmi";
 import { useState, useEffect } from "react";
 
 export const UnifiedAuthButton = () => {
   const { address, authMethod } = useAuth();
   const { login: privyLogin, logout: privyLogout } = usePrivy();
-  const { connectors, connect } = useConnect();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -52,11 +50,6 @@ export const UnifiedAuthButton = () => {
 
   const handleEmailLogin = () => {
     privyLogin();
-    setShowAuthModal(false);
-  };
-
-  const handleWalletConnect = (connector: ReturnType<typeof useConnect>['connectors'][0]) => {
-    connect({ connector });
     setShowAuthModal(false);
   };
 
@@ -164,54 +157,25 @@ export const UnifiedAuthButton = () => {
             {/* Content */}
             <div className="p-6">
               <p className="text-center mb-6" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
-                Choose how you&apos;d like to connect to PetVault
+                Connect to PetVault to manage your digital pets
               </p>
 
               <div className="space-y-4">
-                {/* Email Option */}
-                <div className="p-4 border rounded-2xl cursor-pointer transition-all duration-200 hover:border-green-300 hover:bg-green-50"
+                {/* Single Connect Option */}
+                <div className="p-6 border rounded-2xl cursor-pointer transition-all duration-200 hover:border-purple-300 hover:bg-purple-50"
                      style={{ borderColor: 'rgba(131, 110, 249, 0.2)' }}
                      onClick={handleEmailLogin}>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm">📧</span>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">🔗</span>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-1" style={{ color: '#0e100f' }}>
-                        Email Account
+                    <div className="text-center">
+                      <h4 className="text-lg font-semibold mb-2" style={{ color: '#0e100f' }}>
+                        Connect
                       </h4>
-                      <p className="text-sm mb-2" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
-                        Quick and easy - no wallet required
+                      <p className="text-sm" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
+                        Secure login with multiple wallet options
                       </p>
-                      <ul className="text-xs space-y-1" style={{ color: 'rgba(14, 16, 15, 0.6)' }}>
-                        <li>• Instant transactions</li>
-                        <li>• No approval prompts</li>
-                        <li>• Perfect for beginners</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Wallet Options */}
-                <div className="p-4 border rounded-2xl cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
-                     style={{ borderColor: 'rgba(131, 110, 249, 0.2)' }}
-                     onClick={() => handleWalletConnect(connectors[0])}>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm">🔗</span>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-1" style={{ color: '#0e100f' }}>
-                        Crypto Wallet
-                      </h4>
-                      <p className="text-sm mb-2" style={{ color: 'rgba(14, 16, 15, 0.7)' }}>
-                        Connect your MetaMask or other wallet
-                      </p>
-                      <ul className="text-xs space-y-1" style={{ color: 'rgba(14, 16, 15, 0.6)' }}>
-                        <li>• Full custody of assets</li>
-                        <li>• Traditional Web3 experience</li>
-                        <li>• Requires transaction approval</li>
-                      </ul>
                     </div>
                   </div>
                 </div>
@@ -219,7 +183,7 @@ export const UnifiedAuthButton = () => {
 
               <div className="mt-6 p-3 rounded-xl" style={{ backgroundColor: 'rgba(131, 110, 249, 0.05)' }}>
                 <p className="text-xs text-center" style={{ color: 'rgba(14, 16, 15, 0.6)' }}>
-                  Both options are secure and let you fully interact with your digital pets
+                  Powered by Privy - supports email, social login, and crypto wallets
                 </p>
               </div>
             </div>

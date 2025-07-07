@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { UnifiedAuthButton } from "../components/UnifiedAuthButton";
+import { MobileHeader } from "../components/MobileHeader";
+import { MobileBottomNav } from "../components/MobileBottomNav";
 import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,11 +21,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="theme-color" content="#836ef9" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="PetVault" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
+      </head>
       <body className={inter.className}>
         <Providers>
           <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #fbfaf9, white)' }}>
-            {/* Navigation Header */}
-            <nav className="bg-white/80 backdrop-blur-md border-b border-purple-200 sticky top-0 z-50">
+            {/* Mobile Header - visible only on mobile */}
+            <div className="block sm:hidden">
+              <MobileHeader />
+            </div>
+            
+            {/* Desktop Navigation Header - hidden on mobile */}
+            <nav className="bg-white/80 backdrop-blur-md border-b border-purple-200 sticky top-0 z-50 hidden sm:block">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                   {/* Logo and Brand */}
@@ -68,6 +84,9 @@ export default function RootLayout({
               {children}
             </main>
             
+            {/* Mobile Bottom Navigation */}
+            <MobileBottomNav />
+            
             {/* Footer */}
             <footer className="text-white py-8 mt-16" style={{ backgroundColor: '#200052' }}>
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,13 +104,38 @@ export default function RootLayout({
                   <div className="flex justify-center space-x-6 text-sm">
                     <span className="text-white/60">Powered by Monad</span>
                     <span className="text-white/60">•</span>
-                    <span className="text-white/60">Built with Scaffold-ETH 2</span>
+                    <a 
+                      href="https://docs.monad.xyz/guides/scaffold-eth" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-white/60 hover:text-white/80 transition-colors duration-200 cursor-pointer"
+                    >
+                      Built with Scaffold ETH 2
+                    </a>
                   </div>
                 </div>
               </div>
             </footer>
           </div>
         </Providers>
+        
+        {/* PWA Service Worker Registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    }, function(registrationError) {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
