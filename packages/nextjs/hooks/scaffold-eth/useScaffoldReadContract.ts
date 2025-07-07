@@ -17,8 +17,9 @@ export const useScaffoldReadContract = ({
   return useReadContract({
     abi: contract.abi,
     address: contract.address,
-    functionName: functionName as string,
-    args: args as readonly unknown[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    functionName: functionName as any,
+    args: args as readonly [`0x${string}`] | readonly [bigint] | readonly [`0x${string}`, `0x${string}`] | readonly [`0x${string}`, bigint] | undefined,
     ...readContractConfig,
   });
 }; 
