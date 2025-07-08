@@ -1,12 +1,13 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from "react";
 import { createPublicClient, http } from "viem";
-import { monadTestnet } from "../app/providers";
+import scaffoldConfig, { monadTestnet } from "../scaffold.config";
 import deployedContracts from "../contracts/deployedContracts";
 
-const PetNFTABI = deployedContracts[10143].PetNFT.abi;
-const PetNFTAddress = deployedContracts[10143].PetNFT.address;
+const chainId = scaffoldConfig.targetNetworks[0].id;
+const PetNFTABI = deployedContracts[chainId].PetNFT.abi;
+const PetNFTAddress = deployedContracts[chainId].PetNFT.address;
 
 // Pets data context
 interface PetsData {
@@ -131,11 +132,11 @@ export const PetsProvider = ({ children, address }: PetsProviderProps) => {
     }
   };
 
-  const refreshPets = async () => {
+  const refreshPets = useCallback(async () => {
     if (address) {
       await fetchOwnedPets(address);
     }
-  };
+  }, [address]);
 
   // Load pets immediately when address changes
   useEffect(() => {

@@ -3,12 +3,14 @@
 import { usePetHistory } from "../hooks/usePetHistory";
 import { HistoryItemCard } from "./HistoryItemCard";
 import deployedContracts from "../contracts/deployedContracts";
+import scaffoldConfig from "../scaffold.config";
 
 interface PetHistoryListProps {
   petTokenId: bigint;
 }
 
-const PetNFTAddress = deployedContracts[10143].PetNFT.address;
+const chainId = scaffoldConfig.targetNetworks[0].id;
+const PetNFTAddress = deployedContracts[chainId].PetNFT.address;
 
 export const PetHistoryList = ({ petTokenId }: PetHistoryListProps) => {
   const { useNestedItems } = usePetHistory();

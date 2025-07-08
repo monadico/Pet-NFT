@@ -2,6 +2,7 @@ import { useScaffoldReadContract } from "./scaffold-eth";
 import { useAuth } from "./useAuth";
 import { useUnifiedTransaction } from "./useUnifiedTransaction";
 import deployedContracts from "../contracts/deployedContracts";
+import scaffoldConfig from "../scaffold.config";
 
 export interface HistoryItem {
   title: string;
@@ -30,7 +31,8 @@ export const usePetHistory = () => {
       throw new Error("Please connect your account first");
     }
 
-    const contractInfo = deployedContracts[10143].PetHistoryNFT;
+    const chainId = scaffoldConfig.targetNetworks[0].id;
+    const contractInfo = deployedContracts[chainId].PetHistoryNFT;
     
     return await writeContract({
       address: contractInfo.address,

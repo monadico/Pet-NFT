@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePetHistory } from "../hooks/usePetHistory";
 import deployedContracts from "../contracts/deployedContracts";
+import scaffoldConfig from "../scaffold.config";
 
 interface AddHistoryModalProps {
   isOpen: boolean;
@@ -10,7 +11,8 @@ interface AddHistoryModalProps {
   petTokenId: bigint;
 }
 
-const PetNFTAddress = deployedContracts[10143].PetNFT.address;
+const chainId = scaffoldConfig.targetNetworks[0].id;
+const PetNFTAddress = deployedContracts[chainId].PetNFT.address;
 
 export const AddHistoryModal = ({ isOpen, onClose, petTokenId }: AddHistoryModalProps) => {
   const [title, setTitle] = useState("");

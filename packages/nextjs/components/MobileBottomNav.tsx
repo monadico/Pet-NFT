@@ -7,7 +7,7 @@ import { usePetsData } from "../hooks/usePetsData";
 
 export const MobileBottomNav = () => {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { isConnected } = useAuth();
   const { ownedTokens } = usePetsData();
 
   const navItems = [
@@ -35,9 +35,9 @@ export const MobileBottomNav = () => {
     },
     {
       id: "account",
-      label: user ? "Account" : "Connect",
-      icon: user ? "👤" : "🔗",
-      href: user ? "/account" : "/",
+      label: isConnected ? "Account" : "Connect",
+      icon: isConnected ? "👤" : "🔗",
+      href: isConnected ? "/account" : "/",
       isActive: pathname === "/account"
     }
   ];

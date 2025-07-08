@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useWriteContract } from "wagmi";
+import { useWriteContract, useChainId } from "wagmi";
 import { useSendTransaction } from "@privy-io/react-auth";
 import { useAuth } from "./useAuth";
 import { encodeFunctionData } from "viem";
 import type { Abi } from "viem";
+import scaffoldConfig from "../scaffold.config";
 
 export interface TransactionConfig {
   address: `0x${string}`;
@@ -17,6 +18,7 @@ export interface TransactionConfig {
 
 export const useUnifiedTransaction = () => {
   const { authMethod } = useAuth();
+  const chainId = useChainId();
   const [isPrivyPending, setIsPrivyPending] = useState(false);
   const [isPrivySuccess, setIsPrivySuccess] = useState(false);
   const [privyError, setPrivyError] = useState<Error | null>(null);
@@ -28,6 +30,12 @@ export const useUnifiedTransaction = () => {
   const { sendTransaction: privySendTransaction } = useSendTransaction();
 
   const writeContract = async (config: TransactionConfig) => {
+    // 🚨 CRITICAL: Check if user is on correct network before ANY transaction
+    const targetNetworkId = scaffoldConfig.targetNetworks[0].id;
+    if (chainId !== targetNetworkId) {
+      const error = new Error(`Wrong network! Please switch to ${scaffoldConfig.targetNetworks[0].name} (Chain ID: ${targetNetworkId}). Currently on chain ID: ${chainId}`);
+      throw error;
+    }
     if (authMethod === 'email') {
       // Use Privy's sendTransaction for email users - AUTO-APPROVED
       setIsPrivyPending(true);

@@ -1,5 +1,6 @@
 import { useReadContract } from "wagmi";
 import deployedContracts from "../../contracts/deployedContracts";
+import scaffoldConfig from "../../scaffold.config";
 
 export const useScaffoldReadContract = ({
   contractName,
@@ -11,7 +12,7 @@ export const useScaffoldReadContract = ({
   functionName: string;
   args?: readonly unknown[];
 } & Omit<Parameters<typeof useReadContract>[0], "abi" | "address" | "functionName" | "args">) => {
-  const chainId = 10143;
+  const chainId = scaffoldConfig.targetNetworks[0].id;
   const contract = deployedContracts[chainId][contractName];
 
   return useReadContract({

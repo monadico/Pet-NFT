@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@privy-io/react-auth": "^2.17.3",
-    "@rainbow-me/rainbowkit": "^2.2.8",
     "@tanstack/react-query": "^5.81.5",
     "next": "15.3.4",
     "react": "^19.0.0",

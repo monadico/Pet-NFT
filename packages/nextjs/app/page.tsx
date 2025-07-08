@@ -6,12 +6,14 @@ import { MyPets } from "./MyPets";
 import { useAuth } from "../hooks/useAuth";
 import { useUnifiedTransaction } from "../hooks/useUnifiedTransaction";
 import Link from "next/link";
+import scaffoldConfig from "../scaffold.config";
 
 // NOTE: This will be a new component we create in the next step
 // import { MyPets } from "./MyPets"; 
 
-const PetNFTABI = deployedContracts[10143].PetNFT.abi;
-const PetNFTAddress = deployedContracts[10143].PetNFT.address;
+const chainId = scaffoldConfig.targetNetworks[0].id;
+const PetNFTABI = deployedContracts[chainId].PetNFT.abi;
+const PetNFTAddress = deployedContracts[chainId].PetNFT.address;
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("mint");

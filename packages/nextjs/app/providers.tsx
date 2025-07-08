@@ -1,64 +1,76 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { WagmiProvider, createConfig, http } from "wagmi";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { PetsProviderWrapper } from "../components/PetsProviderWrapper";
-import "@rainbow-me/rainbowkit/styles.css";
+import { NetworkEnforcer } from "../components/NetworkEnforcer";
+import { monadTestnet } from "../scaffold.config";
 
-export const monadTestnet = {
-  id: 10143,
-  name: 'Monad Testnet',
-  nativeCurrency: { name: 'Monad', symbol: 'MONAD', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://testnet-rpc.monad.xyz/'] },
-  },
-  blockExplorers: {
-    default: { name: 'MonadScan', url: 'https://testnet.monadscan.io' },
-  },
-  testnet: true,
-};
+// Re-export for backward compatibility
+export { monadTestnet };
 
-const config = getDefaultConfig({
-    appName: "Pet NFT - Monad Testnet",
-    projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
-    chains: [monadTestnet],
-    ssr: true, // If your dApp uses server side rendering (SSR)
+// 🚨 CRITICAL: Configure Wagmi to ONLY support Monad testnet
+const config = createConfig({
+  chains: [monadTestnet], // ONLY Monad testnet
+  transports: {
+    [monadTestnet.id]: http(),
+  },
 });
 
 const queryClient = new QueryClient();
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show a loading state during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
       config={{
-        // Configure Privy for your Monad Testnet
+        // 🚨 CRITICAL: Configure Privy to ONLY support Monad testnet
         appearance: {
           theme: 'light',
-          accentColor: '#676FFF',
-          logo: 'https://your-logo-url.com/logo.png', // Replace with your logo
+          accentColor: '#836ef9',
           showWalletLoginFirst: false, // Show email login first for better UX
         },
-        // Configure supported chains
+        // 🚨 CRITICAL: Only allow Monad testnet - this prevents users from connecting other networks
         supportedChains: [monadTestnet],
-        // Configure embedded wallets
+        defaultChain: monadTestnet,
+        // Configure embedded wallets for email users
         embeddedWallets: {
-          createOnLogin: 'users-without-wallets', // Creates wallet for email users
-          requireUserPasswordOnCreate: false, // Simplify user experience
+          createOnLogin: 'users-without-wallets',
+          requireUserPasswordOnCreate: false,
         },
         // Login methods
         loginMethods: ['email', 'wallet'],
+        // 🚨 CRITICAL: Disable external wallet network switching
+        externalWallets: {
+          coinbaseWallet: { 
+            connectionOptions: 'smartWalletOnly' 
+          }
+        },
       }}
     >
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>
+          <NetworkEnforcer />
             <PetsProviderWrapper>
               {children}
             </PetsProviderWrapper>
-          </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </PrivyProvider>

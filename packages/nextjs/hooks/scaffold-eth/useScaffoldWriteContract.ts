@@ -1,12 +1,13 @@
 import { useWriteContract } from "wagmi";
 import deployedContracts from "../../contracts/deployedContracts";
+import scaffoldConfig from "../../scaffold.config";
 
 export const useScaffoldWriteContract = ({
   contractName,
 }: {
   contractName: keyof typeof deployedContracts[10143];
 }) => {
-  const chainId = 10143;
+  const chainId = scaffoldConfig.targetNetworks[0].id;
   const contract = deployedContracts[chainId][contractName];
 
   const { writeContract, writeContractAsync, ...writeContractResult } = useWriteContract();
