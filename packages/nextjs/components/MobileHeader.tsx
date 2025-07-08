@@ -7,7 +7,7 @@ import { UnifiedAuthButton } from "./UnifiedAuthButton";
 
 export const MobileHeader = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const { user, address } = useAuth();
+  const { privyUser, address } = useAuth();
 
   return (
     <>
@@ -73,14 +73,14 @@ export const MobileHeader = () => {
               </Link>
               
               <div className="pt-4 border-t border-purple-100">
-                {user || address ? (
+                {privyUser || address ? (
                   <div className="space-y-3">
                     <div className="px-4 py-2 rounded-lg" style={{ backgroundColor: 'rgba(131, 110, 249, 0.1)' }}>
                       <p className="text-sm font-medium" style={{ color: '#836ef9' }}>
                         Connected as
                       </p>
                       <p className="text-sm truncate" style={{ color: '#0e100f' }}>
-                        {user?.email || `${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                        {String(privyUser?.email?.address || '') || `${address?.slice(0, 6)}...${address?.slice(-4)}`}
                       </p>
                     </div>
                   </div>
