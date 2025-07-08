@@ -2,6 +2,7 @@
 
 import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from "react";
 import { createPublicClient, http } from "viem";
+import { useWatchContractEvent } from "wagmi";
 import scaffoldConfig, { monadTestnet } from "../scaffold.config";
 import deployedContracts from "../contracts/deployedContracts";
 
@@ -151,17 +152,34 @@ export const PetsProvider = ({ children, address }: PetsProviderProps) => {
     }
   }, [address]);
 
-  // Set up periodic refresh every 30 seconds
-  useEffect(() => {
-    if (!address) return;
-
-    const interval = setInterval(() => {
-      console.log("Periodic pets refresh...");
-      refreshPets();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [address, refreshPets]);
+  // 🎯 REAL-TIME EVENT WATCHING: Watch for Transfer events to detect new mints
+  // This replaces the periodic refresh and only updates when there's actually a new mint
+  useWatchContractEvent({
+    address: PetNFTAddress,
+    abi: PetNFTABI,
+    eventName: "Transfer",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onLogs: (logs: any) => {
+      if (!address) return;
+      
+      // Check if any of the Transfer events involve our address
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const relevantTransfers = logs.filter((log: any) => {
+        const { from, to } = log.args;
+        // New mint: from === 0x0 (zero address) and to === our address
+        // OR transfer to our address from someone else
+        return (from === '0x0000000000000000000000000000000000000000' && to?.toLowerCase() === address.toLowerCase()) ||
+               (to?.toLowerCase() === address.toLowerCase());
+      });
+      
+      if (relevantTransfers.length > 0) {
+        console.log(`🎉 Detected ${relevantTransfers.length} relevant Transfer event(s), refreshing pets...`);
+        refreshPets();
+      }
+    },
+    // Only watch events if we have an address
+    enabled: !!address,
+  });
 
   const contextValue: PetsData = {
     ownedTokens,

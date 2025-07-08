@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { UnifiedAuthButton } from "../components/UnifiedAuthButton";
 import { MobileHeader } from "../components/MobileHeader";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import Link from "next/link";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "PetVault - Secure Digital Pet Ownership",
@@ -30,7 +27,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.svg" />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <Providers>
           <div className="min-h-screen" style={{ background: 'linear-gradient(to bottom right, #fbfaf9, white)' }}>
             {/* Mobile Header - visible only on mobile */}
