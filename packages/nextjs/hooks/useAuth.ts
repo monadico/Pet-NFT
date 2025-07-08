@@ -3,7 +3,9 @@
 import { useAccount, useDisconnect } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
+import { useChainId } from "wagmi";
 import type { User } from "@privy-io/react-auth";
+import scaffoldConfig from "../scaffold.config";
 
 export interface UnifiedAuthState {
   // User info
@@ -33,6 +35,7 @@ export const useAuth = (): UnifiedAuthState => {
   const wagmiAccount = useAccount();
   const { address: wagmiAddress, isConnected: wagmiConnected } = wagmiAccount;
   const { disconnect: wagmiDisconnect } = useDisconnect();
+  const chainId = useChainId();
   
   // Privy hooks (for email authentication)
   const { 
@@ -46,6 +49,26 @@ export const useAuth = (): UnifiedAuthState => {
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // 🚨 CRITICAL: Validate network on wallet connection
+  useEffect(() => {
+    if (!mounted || !wagmiConnected) return;
+    
+    const targetNetworkId = scaffoldConfig.targetNetworks[0].id;
+    if (chainId !== targetNetworkId) {
+      console.error(`🚨 WRONG NETWORK DETECTED: User connected to chain ${chainId}, but only ${targetNetworkId} is allowed!`);
+      
+      // Immediately disconnect the user
+      wagmiDisconnect();
+      
+      // Show alert to user
+      alert(`🚨 Wrong Network!\n\nThis app only works on ${scaffoldConfig.targetNetworks[0].name} (Chain ID: ${targetNetworkId}).\n\nYou were connected to Chain ID: ${chainId}.\n\nPlease switch to the correct network and try again.`);
+      
+      return;
+    }
+    
+    console.log(`✅ Correct network detected: ${scaffoldConfig.targetNetworks[0].name} (Chain ID: ${chainId})`);
+  }, [mounted, wagmiConnected, chainId, wagmiDisconnect]);
   
   // Determine the active authentication method and address
   const getActiveAuth = () => {

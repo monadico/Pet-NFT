@@ -47,7 +47,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
           accentColor: '#836ef9',
           showWalletLoginFirst: false, // Show email login first for better UX
         },
-        // 🚨 CRITICAL: Only allow Monad testnet - this prevents users from connecting other networks
+        // 🚨 CRITICAL: Only allow Monad testnet - this restricts ALL wallets to this chain
         supportedChains: [monadTestnet],
         defaultChain: monadTestnet,
         // Configure embedded wallets for email users
@@ -57,12 +57,18 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
         },
         // Login methods
         loginMethods: ['email', 'wallet'],
-        // 🚨 CRITICAL: Disable external wallet network switching
+        // 🚨 CRITICAL: Configure external wallets to support all major wallet types
+        // Note: supportedChains above restricts ALL these wallets to Monad testnet only
         externalWallets: {
+          // ✅ Coinbase Wallet support
           coinbaseWallet: { 
-            connectionOptions: 'smartWalletOnly' 
+            connectionOptions: 'smartWalletOnly'
+          },
+          // ✅ WalletConnect support (includes Rainbow, MetaMask, Phantom, Trust, and many others)
+          walletConnect: {
+            enabled: true
           }
-        },
+        }
       }}
     >
       <WagmiProvider config={config}>
