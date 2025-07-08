@@ -1,13 +1,21 @@
-# 🏗 Scaffold-ETH 2 Foundry Edition + Monad Testnet Configuration
+# 🐾 PetVault - Veterinary dApp on Monad Testnet
 
 <h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
+  <a href="https://docs.scaffoldeth.io">Scaffold-ETH 2 Documentation</a> |
+  <a href="https://scaffoldeth.io">Scaffold-ETH Website</a>
 </h4>
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+🏥 A decentralized veterinary application for managing pet health records and consultations on Monad testnet. Built with modern Web3 patterns and comprehensive network detection.
 
-⚙️ Built using NextJS, RainbowKit, Foundry, Wagmi, Viem, and Typescript.
+⚙️ Built using NextJS, Wagmi v2, Viem, Foundry, Privy Auth, and TypeScript.
+
+## 🌟 Key Features
+
+- 🔐 **Unified Authentication**: Email + wallet login via Privy
+- 🌐 **Network Detection**: Advanced wagmi v2 patterns for chain verification
+- 🐾 **Pet NFT Management**: Register and manage digital pet records
+- 📱 **Responsive Design**: Mobile-first veterinary interface
+- 🔄 **Auto Network Switching**: Seamless Monad testnet enforcement
 
 - ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
 - 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
@@ -25,40 +33,72 @@ Before you begin, you need to install the following tools:
 - Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
 - [Git](https://git-scm.com/downloads)
 
+## Environment Variables
+
+Create a `.env.local` file in `packages/nextjs/` with the following variables:
+
+```bash
+# 🔐 Privy Auth Configuration (Required)
+# Get your app ID from https://dashboard.privy.io/
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
+
+# 📦 Pinata IPFS Configuration (Required) 
+# Get your JWT from https://app.pinata.cloud/
+NEXT_PUBLIC_PINATA_JWT=your_pinata_jwt_token_here
+
+# 🌐 WalletConnect Configuration (Optional)
+# Get your project ID from https://cloud.walletconnect.com/
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id_here
+```
+
 ## Quickstart
 
-To get started with Scaffold-ETH 2, follow the steps below:
+To get started with PetVault, follow the steps below:
 
-1. Install dependencies if it was skipped in CLI:
+1. **Clone and install dependencies:**
 
-```
-cd my-dapp-example
+```bash
+git clone <repository-url>
+cd petvault
 yarn install
 ```
 
-2. Run a local network in the first terminal:
+2. **Set up environment variables:**
 
-```
+Create `packages/nextjs/.env.local` with the required environment variables (see above).
+
+3. **Run local development (optional):**
+
+```bash
+# Start local blockchain
 yarn chain
-```
 
-This command starts a local Ethereum network using Foundry. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/foundry/foundry.toml`.
+# Deploy to local network
+yarn deploy --network localhost
 
-3. On a second terminal, deploy the test contract:
-
-```
-yarn deploy
-```
-
-This command deploys a test smart contract to the local network. The contract is located in `packages/foundry/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/foundry/script` to deploy the contract to the network. You can also customize the deploy script.
-
-4. On a third terminal, start your NextJS app:
-
-```
+# Start frontend
 yarn start
 ```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+4. **Deploy to Monad Testnet:**
+
+```bash
+# Deploy contracts to Monad testnet
+yarn deploy --network monad
+
+# Start frontend (configured for Monad testnet)
+yarn start
+```
+
+Visit your app on: `http://localhost:3000`. 
+
+## 🌐 Network Configuration
+
+This dApp is **specifically configured for Monad Testnet** and includes:
+
+- **Automatic Network Detection**: Uses wagmi v2 patterns for robust chain verification
+- **Network Enforcement**: Automatically prompts users to switch to Monad testnet
+- **Multi-wallet Support**: Compatible with MetaMask, Rabby, WalletConnect, and more
 
 Run smart contract test with `yarn foundry:test`
 

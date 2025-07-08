@@ -5,8 +5,8 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useState, useEffect } from "react";
 
 export const UnifiedAuthButton = () => {
-  const { address, authMethod } = useAuth();
-  const { login: privyLogin, logout: privyLogout } = usePrivy();
+  const { address, authMethod, disconnect } = useAuth();
+  const { login: privyLogin } = usePrivy();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -40,12 +40,8 @@ export const UnifiedAuthButton = () => {
   };
 
   const handleDisconnect = () => {
-    if (authMethod === "email") {
-      privyLogout();
-    } else {
-      // For wallet connections, we'll just close the modal
-      setShowAuthModal(false);
-    }
+    disconnect();
+    setShowAuthModal(false);
   };
 
   const handleEmailLogin = () => {

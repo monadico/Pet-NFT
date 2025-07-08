@@ -7,15 +7,48 @@ import { PrivyProvider } from "@privy-io/react-auth";
 import { PetsProviderWrapper } from "../components/PetsProviderWrapper";
 import { NetworkEnforcer } from "../components/NetworkEnforcer";
 import { monadTestnet } from "../scaffold.config";
+import { mainnet, sepolia, polygon, polygonMumbai, bsc, bscTestnet, arbitrum, arbitrumGoerli, optimism, optimismGoerli, base, baseGoerli } from "wagmi/chains";
 
 // Re-export for backward compatibility
 export { monadTestnet };
 
-// 🚨 CRITICAL: Configure Wagmi to ONLY support Monad testnet
+// 🚨 WAGMI V2 PATTERN: Multi-chain detection with single-chain enforcement
+// This configuration allows wagmi to detect when users switch to ANY of these networks,
+// but the NetworkEnforcer component enforces ONLY Monad testnet usage.
+// 
+// KEY PRINCIPLE: In wagmi v2, if a user connects to a network NOT in this chains array,
+// useAccount() will return { isConnected: true, chain: undefined }
+// This undefined chain object is how we detect "unsupported" networks.
 const config = createConfig({
-  chains: [monadTestnet], // ONLY Monad testnet
+  chains: [
+    monadTestnet,        // ✅ Required network
+    mainnet,             // 🔍 For detection only
+    sepolia,             // 🔍 For detection only  
+    polygon,             // 🔍 For detection only
+    polygonMumbai,       // 🔍 For detection only
+    bsc,                 // 🔍 For detection only
+    bscTestnet,          // 🔍 For detection only
+    arbitrum,            // 🔍 For detection only
+    arbitrumGoerli,      // 🔍 For detection only
+    optimism,            // 🔍 For detection only
+    optimismGoerli,      // 🔍 For detection only
+    base,                // 🔍 For detection only
+    baseGoerli,          // 🔍 For detection only
+  ],
   transports: {
     [monadTestnet.id]: http(),
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+    [polygon.id]: http(),
+    [polygonMumbai.id]: http(),
+    [bsc.id]: http(),
+    [bscTestnet.id]: http(),
+    [arbitrum.id]: http(),
+    [arbitrumGoerli.id]: http(),
+    [optimism.id]: http(),
+    [optimismGoerli.id]: http(),
+    [base.id]: http(),
+    [baseGoerli.id]: http(),
   },
 });
 
@@ -41,14 +74,28 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
       config={{
-        // 🚨 CRITICAL: Configure Privy to ONLY support Monad testnet
+        // 🔍 DETECTION: Configure Privy appearance and settings
         appearance: {
           theme: 'light',
           accentColor: '#836ef9',
           showWalletLoginFirst: false, // Show email login first for better UX
         },
-        // 🚨 CRITICAL: Only allow Monad testnet - this restricts ALL wallets to this chain
-        supportedChains: [monadTestnet],
+        // 🚨 WAGMI V2 PATTERN: Support multiple chains for detection but enforce Monad testnet via NetworkEnforcer
+        supportedChains: [
+          monadTestnet,        // ✅ Required network
+          mainnet,             // 🔍 For detection only
+          sepolia,             // 🔍 For detection only
+          polygon,             // 🔍 For detection only
+          polygonMumbai,       // 🔍 For detection only
+          bsc,                 // 🔍 For detection only
+          bscTestnet,          // 🔍 For detection only
+          arbitrum,            // 🔍 For detection only
+          arbitrumGoerli,      // 🔍 For detection only
+          optimism,            // 🔍 For detection only
+          optimismGoerli,      // 🔍 For detection only
+          base,                // 🔍 For detection only
+          baseGoerli,          // 🔍 For detection only
+        ],
         defaultChain: monadTestnet,
         // Configure embedded wallets for email users
         embeddedWallets: {
@@ -57,8 +104,8 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
         },
         // Login methods
         loginMethods: ['email', 'wallet'],
-        // 🚨 CRITICAL: Configure external wallets to support all major wallet types
-        // Note: supportedChains above restricts ALL these wallets to Monad testnet only
+        // 🚨 WAGMI V2 PATTERN: Configure external wallets to support all major wallet types
+        // Note: We support multiple chains for DETECTION but NetworkEnforcer enforces Monad testnet only
         externalWallets: {
           // ✅ Coinbase Wallet support
           coinbaseWallet: { 
